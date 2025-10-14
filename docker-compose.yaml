@@ -1,0 +1,45 @@
+services:
+ app:
+   container_name: Aapplication_container
+   build:
+    context: .
+    dockerfile: Dockerfile
+   restart: always
+   ports:
+    - "8080:8080"
+   environment:
+      APP_PORT: "8080"
+      DB_NAME: "appdb"
+      DB_USER: "user"
+      DB_PASSWORD: "password"
+      DB_HOST: "postgresDB"
+      DB_PORT: "5432"
+      JWT_SECRET: "JWT_SECRET"
+      NEW_RELIC_LICENSE_KEY: "new_relic_license_key"
+      MIGRATIONS_PATH: /app/database/migrations
+   volumes:
+      - .:/app
+      - /app/tmp
+   networks:
+    - app-network
+   depends_on:
+    - postgresDB
+ postgresDB:
+    image: postgres:latest
+    container_name: Database_container
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: appdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+volumes:
+ pgdata:
+
+networks:
+ app-network:
+   driver: bridge  
