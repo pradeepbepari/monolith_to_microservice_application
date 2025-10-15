@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -57,17 +58,18 @@ func main() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	// app, err := newrelic.NewApplication(
-	// 	newrelic.ConfigAppName(config.NewRelicAppName),
-	// 	newrelic.ConfigLicense(config.NewRelicLisenceKey),
-	// 	newrelic.ConfigDistributedTracerEnabled(true),
-	// 	newrelic.ConfigAppLogForwardingEnabled(true),
-	// )
+	app, err := newrelic.NewApplication(
+		newrelic.ConfigAppName(config.NewRelicAppName),
+		newrelic.ConfigLicense(config.NewRelicLisenceKey),
+		newrelic.ConfigDistributedTracerEnabled(true),
+		newrelic.ConfigAppLogForwardingEnabled(true),
+	)
 	if err != nil {
 		log.Fatal("Could not start New Relic", err)
 	}
-	// _logger := logger.NewLogger(app)
-	_logger := logger.NewLogger(nil)
+	fmt.Println("newrelic connected successfully")
+	_logger := logger.NewLogger(app)
+	// _logger := logger.NewLogger(nil)
 
 	db, err := database.ConnectDB(config.DBUser, config.DBPassword, config.DBHost, config.DBPort, config.DBName)
 	if err != nil {
@@ -79,10 +81,11 @@ func main() {
 	}
 	repo := repository.NewRepository(db, _logger)
 	service := service.NewService(repo)
-	handler := handlers.NewHandler(service)
+	handler := handlers.NewHandler(service, *app)
 	di := routes.Dependencies{
 		UserHandler: handler,
 	}
+	_logger.Info("Starting the server on port ", config.AppPort)
 	router := gin.Default()
 	routes.ApiRoutes(di, router)
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))

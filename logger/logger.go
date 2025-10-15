@@ -1,8 +1,6 @@
 package logger
 
 import (
-	"bufio"
-	"bytes"
 	"context"
 	"os"
 
@@ -24,16 +22,6 @@ func NewLogger(app *newrelic.Application) *Logger {
 	}
 	backgroundLogger := zap.New(backgroundcore)
 	return &Logger{SugaredLogger: backgroundLogger.Sugar()}
-}
-
-func NewTestLogger() (*Logger, *bytes.Buffer, *bufio.Writer) {
-	var buffer bytes.Buffer
-	writer := bufio.NewWriter(&buffer)
-	logger := zap.NewExample() // Create a new test logger instance
-
-	return &Logger{
-		SugaredLogger: logger.Sugar(),
-	}, &buffer, writer
 }
 
 // DebugContext uses fmt.Sprint to log a message.
